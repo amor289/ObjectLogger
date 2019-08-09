@@ -4,7 +4,7 @@
 
 # [ObjectLogger](https://github.com/yeecode/ObjectLogger)
 ![language](https://img.shields.io/badge/language-java-green.svg)
-![version](https://img.shields.io/badge/mvn-3.0.0-blue.svg?style=flat)
+![version](https://img.shields.io/badge/mvn-3.0.1-blue.svg?style=flat)
 [![codebeat badge](https://codebeat.co/badges/94beca78-0817-4a27-9544-326afe35339f)](https://codebeat.co/projects/github-com-yeecode-objectlogger-master)
 ![license](https://img.shields.io/badge/license-Apache-brightgreen.svg)
 
@@ -33,6 +33,13 @@ The system has the following characteristics:
 - It can automatically parse the attribute changes of objects and support the comparison of rich text.
 - It supports extension of more object attribute types.
 
+The project consists of four parts:
+
+- ObjectLoggerClient: A jar package that can be integrated into a business system. It can complete the log analysis and transmission of the business system. You can obtain the jar package from Maven repository.
+- ObjectLoggerServer: A web service which needs the support of a database. It can accept log information sent by ObjectLoggerClient and provide log query function.
+- react-object-logger:A React component for displaying log information. This component can be imported from npm repository.
+- ObjectLoggerDemo: An example of business system integration ObjectLoggerClient.
+
 # 2 Quick Start
 
 ## 2.1 Create Data Tables
@@ -41,12 +48,12 @@ Use `/server/database/init_data_table.sql` to init two data tables.
 
 ## 2.2 Start Server
 
-Download the new target jar file from `/server/target/ObjectLogger-*.jar`. 
+Download the new target jar file from `/server/target/ObjectLoggerServer-*.jar`. 
 
 Start the jar with the following statement:
 
 ```
-java -jar ObjectLogger-*.jar --spring.datasource.driver-class-name={db_driver} --spring.datasource.url=jdbc:{db}://{db_address}/{db_name} --spring.datasource.username={db_username} --spring.datasource.password={db_password}
+java -jar ObjectLoggerServer-*.jar --spring.datasource.driver-class-name={db_driver} --spring.datasource.url=jdbc:{db}://{db_address}/{db_name} --spring.datasource.username={db_username} --spring.datasource.password={db_password}
 ```
 
 The above configuration items are described below:
@@ -54,25 +61,33 @@ The above configuration items are described below:
 - `db_driver`:Database driver. `com.mysql.jdbc.Driver` for MySQL database; `com.microsoft.sqlserver.jdbc.SQLServerDriver` for SqlServer database. 
 - `db`:DataBase type. `mysql`  for MySQL database ;`sqlserver`  for SqlServer database. 
 - `db_address`:Database address. If the database is native, `127.0.0.1`. 
-- `db_name`:Database name.. 
+- `db_name`:Database name.
 - `db_username`:User name used to log in to the database.
 - `db_password`:Password used to log in to the database.
 
-After starting the jar package, the default welcome page is:
+After starting the jar package, you can see:
+
+![server_start](./pic/server_start.png)
+
+The default welcome page is:
 
 ```
-http://127.0.0.1:8080/ObjectLogger/
+http://127.0.0.1:12301/ObjectLoggerServer/
 ```
 
 Visit the above address to see the following welcome interface:
 
 ![welcome interface](./pic/100.jpg)
 
-The ObjectLogger system has been built.
+The ObjectLoggerServer system has been built.
 
 # 3 Access Service System
 
-This section explains how to configure the business system to record object changes in the business system into ObjectLogger.
+This section explains how to configure the business system to analyze the object changes in the business system through ObjectLoggerClient and then record them in ObjectLoggerServer.
+
+The use of this part can refer to the ObjectLoggerDemo project, which gives a detailed example of business system integration ObjectLoggerClient. ObjectLoggerDemo's product package can be obtained from `/demo/target/ObjectLoggerDemo-*. jar`, and the project can be started directly without any other configuration by running `java -jar ObjectLoggerDemo-*. jar`.
+
+![demo_start](./pic/demo_start.png)
 
 ## 3.1 Add Dependency
 
@@ -80,7 +95,7 @@ Add dependency package in POM file：
 
 ```
 <dependency>
-    <groupId>com.github.yeecode.objectLogger</groupId>
+    <groupId>com.github.yeecode.objectlogger</groupId>
     <artifactId>ObjectLoggerClient</artifactId>
     <version>{last_version}</version>
 </dependency>
@@ -90,11 +105,11 @@ Add dependency package in POM file：
 
 ### 3.2.1 SpringBoot
 
-Add `@ComponentScan` and add ``com.github.yeecode.objectLoggerClient` in `basePackages`：
+Add `@ComponentScan` and add `com.github.yeecode.objectlogger` in `basePackages`：
 
 ```
 @SpringBootApplication
-@ComponentScan(basePackages={"{your_beans_root}","com.github.yeecode.objectLogger"})
+@ComponentScan(basePackages={"{your_beans_root}","com.github.yeecode.objectlogger"})
 public class MyBootAppApplication {
 public static void main(String[] args) {
     // Eliminate other code
@@ -106,7 +121,7 @@ public static void main(String[] args) {
 Add the following code to `applicationContext.xml` file:
 
 ```
-<context:component-scan base-package="com.github.yeecode.objectLoggerClient">
+<context:component-scan base-package="com.github.yeecode.objectlogger">
 </context:component-scan>
 ```
 
@@ -115,12 +130,12 @@ Add the following code to `applicationContext.xml` file:
 Add the following code to `application.properties`:
 
 ```
-yeecode.objectLogger.serverAddress=http://{ObjectLogger_address}
+yeecode.objectLogger.serverAddress=http://{ObjectLoggerServer_address}
 yeecode.objectLogger.businessAppName={your_app_name}
 yeecode.objectLogger.autoLogAttributes=true
 ```
 
-- `ObjectLogger_address`: The deployment address of the ObjectLogger in the previous step, such as: `127.0.0.1:8080`
+- `ObjectLoggerServer_address`: The deployment address of the ObjectLoggerServer in the previous step, such as: `127.0.0.1:12301`
 - `your_app_name`:The application name of the current business system. In order to differentiate log sources and support multiple business systems at the same time
 - `yeecode.objectLogger.autoLogAttributes`:Whether to automatically record all attributes of an object
 
@@ -129,7 +144,7 @@ At this point, the configuration of the business system is completed.
 # 4 Query Logs
 
 
-The logs recorded in the system can be queried by `ObjectLogger/log/query', and the logs can be filtered by passing in parameters.
+The logs recorded in the system can be queried by `http://127.0.0.1:12301/ObjectLoggerServer/log/query`, and the logs can be filtered by passing in parameters.
 
 ![demo](./pic/api.gif)
 
@@ -169,9 +184,9 @@ logClient.logAttributes(
                 null);
 ```
 
-Query form ObjectLogger：
+Query form ObjectLoggerServer：
 ```
-http://{your_ObjectLogger_address}/ObjectLogger/log/query?appName=ObjectLoggerDemo&objectName=CleanRoomTask&objectId=5
+http://127.0.0.1:12301/ObjectLoggerServer/log/query?appName=ObjectLoggerDemo&objectName=CleanRoomTask&objectId=5
 ```
 
 Results：
@@ -230,7 +245,7 @@ newTask.setAddress("Sunny Street");
 newTask.setRoomNumber(702);
 
 logClient.logObject(
-                cleanRoomTask.getId(),
+                cleanRoomTask.getId().toString(),
                 "Tom",
                 "update",
                 "Update a Task",
@@ -240,10 +255,10 @@ logClient.logObject(
                 newTask);
 ```
 
-Query form ObjectLogger：
+Query form ObjectLoggerServer：
 
 ```
-http://{your_ObjectLogger_address}/ObjectLogger/log/query?appName=ObjectLoggerDemo&objectName=CleanRoomTask&objectId=5
+http://127.0.0.1:12301/ObjectLoggerServer/log/query?appName=ObjectLoggerDemo&objectName=CleanRoomTask&objectId=5
 ```
 
 Results：
@@ -313,11 +328,11 @@ Results：
 
 # 7 Object Attribute Filtering
 
-Some object attributes do not need to be logged, such as `updateTime`, `hashCode`, etc. ObjectLogger supports filtering attributes of objects, tracking only attributes that we are interested in.
+Some object attributes do not need to be logged, such as `updateTime`, `hashCode`, etc. ObjectLoggerClient supports filtering attributes of objects, tracking only attributes that we are interested in.
 
-And for each attribute, we can change the way it is recorded in the ObjectLogger system, such as changing the name.
+And for each attribute, we can change the way it is recorded in the ObjectLoggerClient system, such as changing the name.
 
-To enable this function, first change the `yeecode.objectLogger.autoLogAttributes` in the configuration to `false'.
+To enable this function, first change the `yeecode.objectLogger.autoLogAttributes` in the configuration to `false`.
 
 ```
 yeecode.objectLogger.autoLogAttributes=true
@@ -344,16 +359,16 @@ private String description;
 ```
 
 - alias:The attribute alias to display.
-- builtinType：Built-in type of ObjectLogger, which form the BuiltinTypeHandler enum. The default value is `BuiltinTypeHandler.NORMAL`.
+- builtinType：Built-in type of ObjectLoggerClient, which form the BuiltinTypeHandler enum. The default value is `BuiltinTypeHandler.NORMAL`.
     - BuiltinTypeHandler.NORMAL：Record the new and old values.
-    - BuiltinTypeHandler.TEXT: Line-by-line comparison of rich text differences.
+    - BuiltinTypeHandler.RICHTEXT: Line-by-line comparison of rich text differences.
 - extendedType：Extend attribute types. Users can extend the processing of certain fields.
 
 # 8 Extended Processing Attribute
 
-In many cases, users want to be able to decide how to handle certain object attributes independently. For example, users may want to convert the `userId` attribute of the `Task` object into a name and store it in the log system, thus completely decoupling the log system from `userId'.
+In many cases, users want to be able to decide how to handle certain object attributes independently. For example, users may want to convert the `userId` attribute of the `Task` object into a name and store it in the log system, thus completely decoupling the log system from `userId`.
 
-ObjectLogger fully supports this scenario, allowing users to decide how to log certain attributes independently. To achieve this function, first assign a string value to the `extendedType` attribute of `@LogTag` that needs to be extended. For example:
+ObjectLoggerClient fully supports this scenario, allowing users to decide how to log certain attributes independently. To achieve this function, first assign a string value to the `extendedType` attribute of `@LogTag` that needs to be extended. For example:
 
 ```
 @LogTag(alias = "UserId", extendedType = "userIdType")
@@ -372,7 +387,7 @@ public class ExtendedTypeHandler implements BaseExtendedTypeHandler {
 }
 ```
 
-When ObjectLogger processes this property, it passes information about the property into the `handleAttributeChange'method of the extended bean. The four parameters introduced are explained as follows:
+When ObjectLoggerClient processes this property, it passes information about the property into the `handleAttributeChange`method of the extended bean. The four parameters introduced are explained as follows:
 
 - `extendedType`：Extended Type.In this example, `userIdType`. 
 - `attributeName`：Attribute Name. In this example,`userId`. 
@@ -400,23 +415,11 @@ public class ExtendedTypeHandler implements BaseExtendedTypeHandler {
 
 ## 9 Roadmap
 
-- 1.0.0：Initialize the system
-- 2.0.0：Optimized system structure
-- 2.0.1：Made the system support multi-threading
-- 2.2.0：Added automatic recording function of global object attribute change
-- 2.3.0：Added automatic recording for inherited attributes
-- 3.0.0：Optimizing System Naming
 - TODO：Added object deep copy function
-
-
-
-
-
-
-
-
-
-
-
-
-
+- 3.0.1：Optimizing System Naming, represent the difference value with json
+- 3.0.0：Optimizing System Naming
+- 2.3.0：Added automatic recording for inherited attributes
+- 2.2.0：Added automatic recording function of global object attribute change
+- 2.0.1：Made the system support multi-threading
+- 2.0.0：Optimized system structure
+- 1.0.0：Initialize the system
