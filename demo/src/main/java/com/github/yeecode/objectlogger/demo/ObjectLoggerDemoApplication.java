@@ -24,5 +24,6 @@ public class ObjectLoggerDemoApplication {
         System.out.println("http://127.0.0.1:12302/ObjectLoggerDemo/task/start");
         System.out.println("http://127.0.0.1:12302/ObjectLoggerDemo/task/update");
         System.out.println("###############################");
+        System.out.println("###############################---------------------");
     }
 }
